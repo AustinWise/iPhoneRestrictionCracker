@@ -52,7 +52,7 @@ namespace ConsoleApp9
             {
                 con.Open();
                 using (var cmd = new SQLiteCommand("select fileId from Files where relativePath like \"%/com.apple.restrictionspassword.plist\"", con))
-                using (var reader = cmd.ExecuteReader(System.Data.CommandBehavior.KeyInfo))
+                using (var reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
                     {
