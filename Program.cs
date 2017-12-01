@@ -3,6 +3,7 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -73,29 +74,41 @@ namespace ConsoleApp9
             var key = Convert.FromBase64String(datas[0].Value);
             var salt = Convert.FromBase64String(datas[1].Value);
 
-            bool foundPassword = false;
+            var cts = new CancellationTokenSource();
+            var opts = new ParallelOptions();
+            opts.CancellationToken = cts.Token;
 
-            Parallel.For(0, 10000, pw =>
+            try
             {
-                if (foundPassword)
-                    return;
-
-                var pwstr = pw.ToString("0000");
-                byte[] bytes;
-                using (var der = new MyRfc2898DeriveBytes(pwstr, salt, 1000))
+                Parallel.For(0, 10000, opts, pw =>
                 {
-                    bytes = der.GetBytes(20);
-                }
+                    cts.Token.ThrowIfCancellationRequested();
 
-                for (int i = 0; i < key.Length; i++)
-                {
-                    if (key[i] != bytes[i])
-                        return;
-                }
+                    var pwstr = pw.ToString("0000");
+                    byte[] bytes;
+                    using (var der = new MyRfc2898DeriveBytes(pwstr, salt, 1000))
+                    {
+                        bytes = der.GetBytes(20);
+                    }
 
-                Console.WriteLine(pwstr);
-                foundPassword = true;
-            });
+                    for (int i = 0; i < key.Length; i++)
+                    {
+                        if (key[i] != bytes[i])
+                            return;
+                    }
+
+                    Console.WriteLine(pwstr);
+                    cts.Cancel();
+                });
+            }
+            catch (OperationCanceledException)
+            {
+            }
+
+            if (!cts.IsCancellationRequested)
+            {
+                Console.WriteLine("Failed to brute force password in: " + passwordFilePath);
+            }
         }
     }
 }
