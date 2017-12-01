@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data.SQLite;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -13,12 +10,41 @@ namespace ConsoleApp9
 {
     class Program
     {
-        static void Main(string[] args)
-        {
-            const string BACK_PATH = @"C:\Users\awise\AppData\Roaming\Apple Computer\MobileSync\Backup\da4aeff7d56179a2f7707e9805567d6c82a65e71";
-            const string PLUTIL = @"C:\Program Files (x86)\Common Files\Apple\Apple Application Support\plutil.exe";
-            const string WORK_DIR = @"C:\temp\plist";
+        const int EXIT_FAILURE = 1;
+        const int EXIT_SUCCESS = 0;
 
+        static int Main(string[] args)
+        {
+            try
+            {
+                var appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                var backupsPath = Path.Combine(appdata, "Apple Computer", "MobileSync", "Backup");
+
+                if (!Directory.Exists(backupsPath))
+                {
+                    Console.WriteLine("iTunes backup folder does not exist: " + backupsPath);
+                    return EXIT_FAILURE;
+                }
+
+                foreach (var dir in Directory.GetDirectories(backupsPath))
+                {
+                    ExtractFromBackup(dir);
+
+                }
+
+                return EXIT_SUCCESS;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("PROGRAM CRASHED HORRIBLY");
+                Console.WriteLine();
+                Console.WriteLine(ex);
+                return EXIT_FAILURE;
+            }
+        }
+
+        private static void ExtractFromBackup(string BACK_PATH)
+        {
             var constr = new SQLiteConnectionStringBuilder();
             constr.DataSource = Path.Combine(BACK_PATH, "Manifest.db");
 
