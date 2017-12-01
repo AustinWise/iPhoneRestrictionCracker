@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27004.2009
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp9", "ConsoleApp9.csproj", "{4881CB2A-2E32-476F-812D-71941111FA3D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "iPhoneRestrictionCracker", "iPhoneRestrictionCracker.csproj", "{4881CB2A-2E32-476F-812D-71941111FA3D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
