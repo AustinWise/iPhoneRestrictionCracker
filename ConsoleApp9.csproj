@@ -47,6 +47,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="corefx\Helpers.cs" />
+    <Compile Include="corefx\Rfc2898DeriveBytes.cs" />
+    <Compile Include="corefx\SR.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

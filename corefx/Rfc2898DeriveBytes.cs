@@ -9,9 +9,9 @@ using Internal.Cryptography;
 
 namespace System.Security.Cryptography
 {
-    public class Rfc2898DeriveBytes : DeriveBytes
+    class MyRfc2898DeriveBytes : DeriveBytes
     {
-        private const int MinimumSaltSize = 8;
+        private const int MinimumSaltSize = 4;
         
         private readonly byte[] _password;
         private byte[] _salt;
@@ -26,12 +26,12 @@ namespace System.Security.Cryptography
 
         public HashAlgorithmName HashAlgorithm { get; }
 
-        public Rfc2898DeriveBytes(byte[] password, byte[] salt, int iterations)
+        public MyRfc2898DeriveBytes(byte[] password, byte[] salt, int iterations)
             : this(password, salt, iterations, HashAlgorithmName.SHA1)
         {
         }
 
-        public Rfc2898DeriveBytes(byte[] password, byte[] salt, int iterations, HashAlgorithmName hashAlgorithm)
+        public MyRfc2898DeriveBytes(byte[] password, byte[] salt, int iterations, HashAlgorithmName hashAlgorithm)
         {
             if (salt == null)
                 throw new ArgumentNullException(nameof(salt));
@@ -53,49 +53,19 @@ namespace System.Security.Cryptography
             Initialize();
         }
 
-        public Rfc2898DeriveBytes(string password, byte[] salt)
+        public MyRfc2898DeriveBytes(string password, byte[] salt)
              : this(password, salt, 1000)
         {
         }
 
-        public Rfc2898DeriveBytes(string password, byte[] salt, int iterations)
+        public MyRfc2898DeriveBytes(string password, byte[] salt, int iterations)
             : this(password, salt, iterations, HashAlgorithmName.SHA1)
         {
         }
 
-        public Rfc2898DeriveBytes(string password, byte[] salt, int iterations, HashAlgorithmName hashAlgorithm)
+        public MyRfc2898DeriveBytes(string password, byte[] salt, int iterations, HashAlgorithmName hashAlgorithm)
             : this(Encoding.UTF8.GetBytes(password), salt, iterations, hashAlgorithm)
         {
-        }
-
-        public Rfc2898DeriveBytes(string password, int saltSize)
-            : this(password, saltSize, 1000)
-        {
-        }
-
-        public Rfc2898DeriveBytes(string password, int saltSize, int iterations)
-            : this(password, saltSize, iterations, HashAlgorithmName.SHA1)
-        {
-        }
-
-        public Rfc2898DeriveBytes(string password, int saltSize, int iterations, HashAlgorithmName hashAlgorithm)
-        {
-            if (saltSize < 0)
-                throw new ArgumentOutOfRangeException(nameof(saltSize), SR.ArgumentOutOfRange_NeedNonNegNum);
-            if (saltSize < MinimumSaltSize)
-                throw new ArgumentException(SR.Cryptography_PasswordDerivedBytes_FewBytesSalt, nameof(saltSize));
-            if (iterations <= 0)
-                throw new ArgumentOutOfRangeException(nameof(iterations), SR.ArgumentOutOfRange_NeedPosNum);
-
-            _salt = Helpers.GenerateRandom(saltSize);
-            _iterations = (uint)iterations;
-            _password = Encoding.UTF8.GetBytes(password);
-            HashAlgorithm = hashAlgorithm;
-            _hmac = OpenHmac();
-            // _blockSize is in bytes, HashSize is in bits.
-            _blockSize = _hmac.HashSize >> 3;
-
-            Initialize();
         }
 
         public int IterationCount
@@ -199,17 +169,6 @@ namespace System.Security.Cryptography
                 }
             }
             return password;
-        }
-
-        public byte[] CryptDeriveKey(string algname, string alghashname, int keySize, byte[] rgbIV)
-        {
-            // If this were to be implemented here, CAPI would need to be used (not CNG) because of
-            // unfortunate differences between the two. Using CNG would break compatibility. Since this
-            // assembly currently doesn't use CAPI it would require non-trivial additions.
-            // In addition, if implemented here, only Windows would be supported as it is intended as
-            // a thin wrapper over the corresponding native API.
-            // Note that this method is implemented in PasswordDeriveBytes (in the Csp assembly) using CAPI.
-            throw new PlatformNotSupportedException();
         }
 
         public override void Reset()
