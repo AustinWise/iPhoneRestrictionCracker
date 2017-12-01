@@ -67,8 +67,13 @@ namespace ConsoleApp9
 
                         Console.WriteLine();
 
+                        bool foundPassword = false;
+
                         Parallel.For(0, 10000, pw =>
                         {
+                            if (foundPassword)
+                                return;
+
                             var pwstr = pw.ToString("0000");
                             byte[] bytes;
                             using (var der = new MyRfc2898DeriveBytes(pwstr, salt, 1000))
@@ -83,6 +88,7 @@ namespace ConsoleApp9
                             }
 
                             Console.WriteLine(pwstr);
+                            foundPassword = true;
                         });
 
                     }
