@@ -29,7 +29,6 @@ namespace ConsoleApp9
                 foreach (var dir in Directory.GetDirectories(backupsPath))
                 {
                     ExtractFromBackup(dir);
-
                 }
 
                 return EXIT_SUCCESS;
@@ -43,10 +42,10 @@ namespace ConsoleApp9
             }
         }
 
-        private static void ExtractFromBackup(string BACK_PATH)
+        private static void ExtractFromBackup(string backupPath)
         {
             var constr = new SQLiteConnectionStringBuilder();
-            constr.DataSource = Path.Combine(BACK_PATH, "Manifest.db");
+            constr.DataSource = Path.Combine(backupPath, "Manifest.db");
 
             using (var con = new SQLiteConnection(constr.ToString()))
             {
@@ -57,44 +56,46 @@ namespace ConsoleApp9
                     while (reader.Read())
                     {
                         var fileId = reader.GetString(0);
-                        string passwordFilePath = Path.Combine(BACK_PATH, fileId.Substring(0, 2), fileId);
+                        string passwordFilePath = Path.Combine(backupPath, fileId.Substring(0, 2), fileId);
 
-                        var doc = XDocument.Load(passwordFilePath);
-                        var datas = doc.Root.Element("dict").Elements("data").ToArray();
-
-                        var key = Convert.FromBase64String(datas[0].Value);
-                        var salt = Convert.FromBase64String(datas[1].Value);
-
-                        Console.WriteLine();
-
-                        bool foundPassword = false;
-
-                        Parallel.For(0, 10000, pw =>
-                        {
-                            if (foundPassword)
-                                return;
-
-                            var pwstr = pw.ToString("0000");
-                            byte[] bytes;
-                            using (var der = new MyRfc2898DeriveBytes(pwstr, salt, 1000))
-                            {
-                                bytes = der.GetBytes(20);
-                            }
-
-                            for (int i = 0; i < key.Length; i++)
-                            {
-                                if (key[i] != bytes[i])
-                                    return;
-                            }
-
-                            Console.WriteLine(pwstr);
-                            foundPassword = true;
-                        });
-
+                        ProcessPasswordFile(passwordFilePath);
                     }
                     Console.WriteLine("done");
                 }
             }
+        }
+
+        private static void ProcessPasswordFile(string passwordFilePath)
+        {
+            var doc = XDocument.Load(passwordFilePath);
+            var datas = doc.Root.Element("dict").Elements("data").ToArray();
+
+            var key = Convert.FromBase64String(datas[0].Value);
+            var salt = Convert.FromBase64String(datas[1].Value);
+
+            bool foundPassword = false;
+
+            Parallel.For(0, 10000, pw =>
+            {
+                if (foundPassword)
+                    return;
+
+                var pwstr = pw.ToString("0000");
+                byte[] bytes;
+                using (var der = new MyRfc2898DeriveBytes(pwstr, salt, 1000))
+                {
+                    bytes = der.GetBytes(20);
+                }
+
+                for (int i = 0; i < key.Length; i++)
+                {
+                    if (key[i] != bytes[i])
+                        return;
+                }
+
+                Console.WriteLine(pwstr);
+                foundPassword = true;
+            });
         }
     }
 }
