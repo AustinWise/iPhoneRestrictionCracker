@@ -24,14 +24,7 @@ namespace System.Security.Cryptography
         private int _startIndex;
         private int _endIndex;
 
-        public HashAlgorithmName HashAlgorithm { get; }
-
         public MyRfc2898DeriveBytes(byte[] password, byte[] salt, int iterations)
-            : this(password, salt, iterations, HashAlgorithmName.SHA1)
-        {
-        }
-
-        public MyRfc2898DeriveBytes(byte[] password, byte[] salt, int iterations, HashAlgorithmName hashAlgorithm)
         {
             if (salt == null)
                 throw new ArgumentNullException(nameof(salt));
@@ -45,7 +38,6 @@ namespace System.Security.Cryptography
             _salt = salt.CloneByteArray();
             _iterations = (uint)iterations;
             _password = password.CloneByteArray();
-            HashAlgorithm = hashAlgorithm;
             _hmac = OpenHmac();
             // _blockSize is in bytes, HashSize is in bits.
             _blockSize = _hmac.HashSize >> 3;
@@ -53,18 +45,8 @@ namespace System.Security.Cryptography
             Initialize();
         }
 
-        public MyRfc2898DeriveBytes(string password, byte[] salt)
-             : this(password, salt, 1000)
-        {
-        }
-
         public MyRfc2898DeriveBytes(string password, byte[] salt, int iterations)
-            : this(password, salt, iterations, HashAlgorithmName.SHA1)
-        {
-        }
-
-        public MyRfc2898DeriveBytes(string password, byte[] salt, int iterations, HashAlgorithmName hashAlgorithm)
-            : this(Encoding.UTF8.GetBytes(password), salt, iterations, hashAlgorithm)
+            : this(Encoding.UTF8.GetBytes(password), salt, iterations)
         {
         }
 
@@ -176,26 +158,10 @@ namespace System.Security.Cryptography
             Initialize();
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA5350", Justification = "HMACSHA1 is needed for compat. (https://github.com/dotnet/corefx/issues/9438)")]
         private HMAC OpenHmac()
         {
             Debug.Assert(_password != null);
-
-            HashAlgorithmName hashAlgorithm = HashAlgorithm;
-
-            if (string.IsNullOrEmpty(hashAlgorithm.Name))
-                throw new CryptographicException(SR.Cryptography_HashAlgorithmNameNullOrEmpty);
-
-            if (hashAlgorithm == HashAlgorithmName.SHA1)
-                return new HMACSHA1(_password);
-            if (hashAlgorithm == HashAlgorithmName.SHA256)
-                return new HMACSHA256(_password);
-            if (hashAlgorithm == HashAlgorithmName.SHA384)
-                return new HMACSHA384(_password);
-            if (hashAlgorithm == HashAlgorithmName.SHA512)
-                return new HMACSHA512(_password);
-
-            throw new CryptographicException(SR.Format(SR.Cryptography_UnknownHashAlgorithm, hashAlgorithm.Name));
+            return new HMACSHA1(_password);
         }
 
         private void Initialize()
