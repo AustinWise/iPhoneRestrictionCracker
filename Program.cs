@@ -25,26 +25,15 @@ namespace ConsoleApp9
             using (var con = new SQLiteConnection(constr.ToString()))
             {
                 con.Open();
-                using (var cmd = new SQLiteCommand("select fileId, domain from Files where relativePath like \"%/com.apple.restrictionspassword.plist\"", con))
+                using (var cmd = new SQLiteCommand("select fileId from Files where relativePath like \"%/com.apple.restrictionspassword.plist\"", con))
                 using (var reader = cmd.ExecuteReader(System.Data.CommandBehavior.KeyInfo))
                 {
                     while (reader.Read())
                     {
                         var fileId = reader.GetString(0);
-                        var domain = reader.GetString(1);
-                        Console.WriteLine($"{domain}: {fileId}");
-                        string filename = domain + ".xml";
-                        string destPath = Path.Combine(WORK_DIR, filename);
-                        File.Copy(Path.Combine(BACK_PATH, fileId.Substring(0, 2), fileId), destPath, true);
-                        File.SetAttributes(destPath, File.GetAttributes(destPath) & ~FileAttributes.ReadOnly);
+                        string passwordFilePath = Path.Combine(BACK_PATH, fileId.Substring(0, 2), fileId);
 
-                        ProcessStartInfo startInfo = new ProcessStartInfo(PLUTIL, $"-convert xml1 {filename}");
-                        startInfo.UseShellExecute = false;
-                        startInfo.WorkingDirectory = WORK_DIR;
-                        var p = Process.Start(startInfo);
-                        p.WaitForExit();
-
-                        var doc = XDocument.Load(destPath);
+                        var doc = XDocument.Load(passwordFilePath);
                         var datas = doc.Root.Element("dict").Elements("data").ToArray();
 
                         var key = Convert.FromBase64String(datas[0].Value);
@@ -75,6 +64,5 @@ namespace ConsoleApp9
                 }
             }
         }
-
     }
 }
