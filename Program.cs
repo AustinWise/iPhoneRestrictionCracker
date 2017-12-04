@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Claunia.PropertyList;
+using System;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
@@ -45,6 +46,32 @@ namespace Austin.iPhoneRestrictionCracker
 
         private static void ExtractFromBackup(string backupPath)
         {
+            try
+            {
+                var plist = (NSDictionary)PropertyListParser.Parse(Path.Combine(backupPath, "Info.plist"));
+                Console.WriteLine($"{plist["Display Name"]} ({plist["Product Name"]})");
+            }
+            catch
+            {
+                Console.WriteLine("<Unknown device name>");
+            }
+
+            bool isEncrypted = false;
+            try
+            {
+                var plist = (NSDictionary)PropertyListParser.Parse(Path.Combine(backupPath, "Manifest.plist"));
+                isEncrypted = (bool)plist["IsEncrypted"].ToObject();
+            }
+            catch
+            {
+                Console.WriteLine("<Unknown device name>");
+            }
+
+            if (isEncrypted)
+            {
+                Console.WriteLine("\tBackup is encrypted, skipping.");
+            }
+
             var constr = new SQLiteConnectionStringBuilder();
             constr.DataSource = Path.Combine(backupPath, "Manifest.db");
 
@@ -61,7 +88,7 @@ namespace Austin.iPhoneRestrictionCracker
 
                         ProcessPasswordFile(passwordFilePath);
                     }
-                    Console.WriteLine("done");
+                    Console.WriteLine("\tdone");
                 }
             }
         }
@@ -97,7 +124,7 @@ namespace Austin.iPhoneRestrictionCracker
                             return;
                     }
 
-                    Console.WriteLine(pwstr);
+                    Console.WriteLine("\t" + pwstr);
                     cts.Cancel();
                 });
             }
@@ -107,7 +134,7 @@ namespace Austin.iPhoneRestrictionCracker
 
             if (!cts.IsCancellationRequested)
             {
-                Console.WriteLine("Failed to brute force password in: " + passwordFilePath);
+                Console.WriteLine("\tFailed to brute force password in: " + passwordFilePath);
             }
         }
     }
