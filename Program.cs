@@ -101,38 +101,32 @@ namespace Austin.iPhoneRestrictionCracker
             var key = Convert.FromBase64String(datas[0].Value);
             var salt = Convert.FromBase64String(datas[1].Value);
 
-            var cts = new CancellationTokenSource();
-            var opts = new ParallelOptions();
-            opts.CancellationToken = cts.Token;
+            bool foundPassword = false;
 
-            try
+            Parallel.For(0, 10000, (pw, state) =>
             {
-                Parallel.For(0, 10000, opts, pw =>
+                if (state.IsStopped)
+                    return;
+
+                var pwstr = pw.ToString("0000");
+                byte[] bytes;
+                using (var der = new MyRfc2898DeriveBytes(pwstr, salt, 1000))
                 {
-                    cts.Token.ThrowIfCancellationRequested();
+                    bytes = der.GetBytes(20);
+                }
 
-                    var pwstr = pw.ToString("0000");
-                    byte[] bytes;
-                    using (var der = new MyRfc2898DeriveBytes(pwstr, salt, 1000))
-                    {
-                        bytes = der.GetBytes(20);
-                    }
+                for (int i = 0; i < key.Length; i++)
+                {
+                    if (key[i] != bytes[i])
+                        return;
+                }
 
-                    for (int i = 0; i < key.Length; i++)
-                    {
-                        if (key[i] != bytes[i])
-                            return;
-                    }
+                Console.WriteLine("\t" + pwstr);
+                foundPassword = true;
+                state.Stop();
+            });
 
-                    Console.WriteLine("\t" + pwstr);
-                    cts.Cancel();
-                });
-            }
-            catch (OperationCanceledException)
-            {
-            }
-
-            if (!cts.IsCancellationRequested)
+            if (!foundPassword)
             {
                 Console.WriteLine("\tFailed to brute force password in: " + passwordFilePath);
             }
