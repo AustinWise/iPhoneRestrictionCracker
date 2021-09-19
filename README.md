@@ -1,7 +1,7 @@
 iPhoneRestrictionCracker
 ========================
 
-This program will creak the restriction passcode for iOS. You need a to make a
+This program will crack the restriction passcode for iOS. You need a to make a
 non-encrypted backup in iTunes.
 
 ## Download
